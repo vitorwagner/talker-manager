@@ -1,6 +1,6 @@
 const path = require('path');
-const readTalkers = require('./readFile');
 const { writeFile } = require('fs').promises;
+const readTalkers = require('./readFile');
 
 async function writeTalker(talker) {
   const talkers = await readTalkers();
