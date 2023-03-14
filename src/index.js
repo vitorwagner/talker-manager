@@ -1,6 +1,8 @@
 const express = require('express');
+const routers = require('./routers');
 
 const app = express();
+app.use(routers);
 app.use(express.json());
 
 const HTTP_OK_STATUS = 200;
