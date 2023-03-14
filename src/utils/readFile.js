@@ -1,9 +1,16 @@
 const path = require('path');
 const { readFile } = require('fs').promises;
 
+const localPath = path.resolve(__dirname, '../talker.json');
+
 async function readTalkers() {
-  const talkerData = await readFile(path.join(__dirname, '..', 'talker.json'), 'utf-8');
-  return JSON.parse(talkerData);
+  try {
+    const talkerData = await readFile(localPath, 'utf-8');
+    return JSON.parse(talkerData);
+  } catch (err) {
+    console.log(err.message);
+    return null;
+  }
 }
 
 module.exports = readTalkers;
