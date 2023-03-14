@@ -1,11 +1,19 @@
 const express = require('express');
-const { readTalkers, writeTalker } = require('../utils');
+const {
+  readTalkers,
+  writeTalker,
+  searchTalkerByName,
+  searchTalkerByRate,
+  searchTalkerByWatchedAt,
+} = require('../utils');
 const {
   tokenValidation,
   talkerValidation,
   talkValidation,
   watchedAtValidation,
   rateValidation,
+  queryWatchedAtValidation,
+  queryRateValidation,
 } = require('../middlewares');
 
 const router = express.Router();
@@ -15,6 +23,30 @@ router.get('/', async (_req, res) => {
   res.status(200).json(talkers);
 });
 
+router.get(
+  '/search',
+  tokenValidation,
+  queryWatchedAtValidation,
+  queryRateValidation,
+  async (req, res) => {
+    const { q, rate, date } = req.query;
+    let talkers = await readTalkers();
+
+    if (q) {
+      talkers = searchTalkerByName(q, talkers);
+    }
+    if (rate) {
+      talkers = searchTalkerByRate(rate, talkers);
+    }
+    if (date) {
+      talkers = searchTalkerByWatchedAt(date, talkers);
+    }
+
+    if (!talkers) return res.status(200).json([]);
+    return res.status(200).json(talkers);
+  },
+);
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -22,14 +54,16 @@ router.get('/:id', async (req, res) => {
   const foundTalker = talkers.find((talker) => talker.id === Number(id));
 
   if (!foundTalker) {
-    return res.status(404).json({ message: 'Pessoa palestrante não encontrada' }); 
+    return res
+      .status(404)
+      .json({ message: 'Pessoa palestrante não encontrada' });
   }
 
   res.status(200).json(foundTalker);
 });
 
 const validation = [
-  tokenValidation, 
+  tokenValidation,
   talkerValidation,
   talkValidation,
   watchedAtValidation,
@@ -37,20 +71,24 @@ const validation = [
 ];
 
 router.post('/', validation, async (req, res) => {
-    const { name, age, talk: { watchedAt, rate } } = req.body;
+  const {
+    name,
+    age,
+    talk: { watchedAt, rate },
+  } = req.body;
 
-    const talkers = await readTalkers();
+  const talkers = await readTalkers();
 
-    const newTalker = {
-      id: talkers.length + 1,
-      name,
-      age,
-      talk: { watchedAt, rate },
-    };
+  const newTalker = {
+    id: talkers.length + 1,
+    name,
+    age,
+    talk: { watchedAt, rate },
+  };
 
-    await writeTalker([...talkers, newTalker]);
+  await writeTalker([...talkers, newTalker]);
 
-    res.status(201).json(newTalker);
+  res.status(201).json(newTalker);
 });
 
 router.put('/:id', validation, async (req, res) => {
@@ -58,11 +96,11 @@ router.put('/:id', validation, async (req, res) => {
   const { name, age, talk: { watchedAt, rate } } = req.body;
 
   const talkers = await readTalkers();
-
   const talkerIndex = talkers.findIndex((talker) => talker.id === Number(id));
-
   if (talkerIndex === -1) {
-    return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+    return res
+      .status(404)
+      .json({ message: 'Pessoa palestrante não encontrada' });
   }
   talkers[talkerIndex] = {
     ...talkers[talkerIndex],
