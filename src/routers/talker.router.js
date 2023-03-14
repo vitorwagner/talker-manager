@@ -12,6 +12,7 @@ const {
   talkValidation,
   watchedAtValidation,
   rateValidation,
+  ratePatchValidation,
   queryWatchedAtValidation,
   queryRateValidation,
 } = require('../middlewares');
@@ -110,6 +111,25 @@ router.put('/:id', validation, async (req, res) => {
   };
   await writeTalker(talkers);
   res.status(200).json(talkers[talkerIndex]);
+});
+
+router.patch('/rate/:id', tokenValidation, ratePatchValidation, async (req, res) => {
+  const { id } = req.params;
+  const { rate } = req.body;
+
+  const talkers = await readTalkers();
+  const talkerIndex = talkers.findIndex((talker) => talker.id === Number(id));
+  if (talkerIndex === -1) {
+    return res
+      .status(404)
+      .json({ message: 'Pessoa palestrante não encontrada' });
+  }
+  talkers[talkerIndex] = {
+    ...talkers[talkerIndex],
+    talk: { ...talkers[talkerIndex].talk, rate },
+  };
+  await writeTalker(talkers);
+  res.status(204).send();
 });
 
 router.delete('/:id', tokenValidation, async (req, res) => {
