@@ -16,6 +16,7 @@ const {
   queryWatchedAtValidation,
   queryRateValidation,
 } = require('../middlewares');
+const talkerDB = require('../db/talkerDB');
 
 const router = express.Router();
 
@@ -47,6 +48,25 @@ router.get(
     return res.status(200).json(talkers);
   },
 );
+
+router.get('/db', async (_req, res) => {
+  try {
+    const [result] = await talkerDB.findAll();
+    const talkers = result.map((talker) => ({
+      id: talker.id,
+      name: talker.name,
+      age: talker.age,
+      talk: {
+        watchedAt: talker.talk_watched_at,
+        rate: talker.talk_rate,
+      },
+    }));
+    res.status(200).json(talkers);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.sqlMessage });
+  }
+});
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
